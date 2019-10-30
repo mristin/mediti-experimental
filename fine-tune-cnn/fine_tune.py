@@ -11,28 +11,27 @@ import file_iterator
 import specsmod
 
 
-def define_model(specs: specsmod.Specs) -> tf.keras.Model:
+def define_vgg16_model(specs: specsmod.Specs) -> tf.keras.Model:
     """
-    Adapt the base model with trainable layers.
+    Adapt the base VGG16 model with trainable layers.
 
     :param specs: specification of the classification
-    :return:
+    :return: adapted model
     """
-    """Adapt the base model with trainable layers."""
-    vgg_conv = tf.keras.applications.vgg16.VGG16(
+    base_model = tf.keras.applications.vgg16.VGG16(
         weights='imagenet',
         include_top=False,
         input_shape=(specs.image_size, specs.image_size, 3))
 
     # Freeze the layers except the last 4 layers
-    for layer in vgg_conv.layers[:-4]:
+    for layer in base_model.layers[:-4]:
         layer.trainable = False
 
     # Create the model
     model = tf.keras.models.Sequential()
 
-    # Add the vgg convolutional base model
-    model.add(vgg_conv)
+    # Add the base model
+    model.add(base_model)
 
     # Add new layers
     model.add(tf.keras.layers.Flatten())
@@ -40,6 +39,36 @@ def define_model(specs: specsmod.Specs) -> tf.keras.Model:
     model.add(tf.keras.layers.Dropout(0.5))
 
     model.add(tf.keras.layers.Dense(len(specs.classes), activation="softmax"))
+
+    return model
+
+
+def define_mobilenet_model(specs: specsmod.Specs) -> tf.keras.Model:
+    """
+    Adapt the base Mobilenet V2 model with trainable layers.
+
+    :param specs: specification of the classification
+    :return: adapted model
+    """
+    base_model = tf.keras.applications.mobilenet.MobileNet(
+        weights='imagenet',
+        include_top=False,
+        input_shape=(specs.image_size, specs.image_size, 3))
+
+    wip = base_model.output
+    wip = tf.keras.layers.GlobalAveragePooling2D()(wip)
+    wip = tf.keras.layers.Dense(1024, activation='relu')(wip)
+    preds = tf.keras.layers.Dense(
+        len(specs.classes), activation="softmax")(wip)
+
+    model = tf.keras.Model(inputs=base_model.input, outputs=preds)
+
+    trainable_layers = 20
+    for layer in model.layers[:trainable_layers]:
+        layer.trainable = False
+
+    for layer in model.layers[trainable_layers:]:
+        layer.trainable = True
 
     return model
 
@@ -61,7 +90,7 @@ def main() -> None:
         "--model_path",
         help="Where to save the trained model",
         default=os.path.expanduser(
-            "~/mediti-train/model/fine-tuned-vgg16.keras"))
+            "~/mediti-train/model/fine-tuned-mobilenet.keras"))
 
     args = parser.parse_args()
 
@@ -79,15 +108,18 @@ def main() -> None:
             "Directory with the validation set does not exist: {}".format(
                 val_dir))
 
+    if model_path.exists() and not model_path.is_file():
+        raise RuntimeError(
+            "Expected to overwrite model as a file, but got: {}".format(
+                model_path))
+
     ##
     # Specify the problem and the model
     ##
 
-    preprocess_input = tf.keras.applications.vgg16.preprocess_input
-
     specs = specsmod.Specs()
 
-    model = define_model(specs=specs)
+    model = define_mobilenet_model(specs=specs)
     model.compile(
         optimizer=tf.keras.optimizers.RMSprop(learning_rate=1e-4),
         loss='categorical_crossentropy',
@@ -104,7 +136,7 @@ def main() -> None:
         shear_range=0.2,
         zoom_range=0.2,
         horizontal_flip=True,
-        preprocessing_function=preprocess_input)
+        preprocessing_function=specs.preprocess_input)
 
     train_generator = file_iterator.FileIterator(
         specs=specs,
@@ -124,7 +156,7 @@ def main() -> None:
         specs=specs,
         directory=str(val_dir),
         image_data_generator=tf.keras.preprocessing.image.ImageDataGenerator(
-            preprocessing_function=preprocess_input),
+            preprocessing_function=specs.preprocess_input),
         target_size=(specs.image_size, specs.image_size),
         batch_size=32,
         class_mode='categorical')

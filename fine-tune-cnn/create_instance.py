@@ -45,6 +45,7 @@ def main() -> None:
         # yapf: disable
         proc = subprocess.Popen([
             "gcloud", "compute", "ssh", "devop@{}".format(INSTANCE_NAME),
+            "--zone=europe-west1-b",
             "--command", "echo oi"],
             stderr=subprocess.PIPE,
             stdout=subprocess.PIPE)

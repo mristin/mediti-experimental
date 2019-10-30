@@ -12,3 +12,6 @@ class Specs:
         self.class_indices = dict(zip(self.classes, range(len(self.classes))))
 
         self.image_size = 224
+
+        self.preprocess_input = tf.keras.applications.mobilenet.preprocess_input
+

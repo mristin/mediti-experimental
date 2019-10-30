@@ -75,12 +75,28 @@ def main() -> None:
         "--model_path",
         help="Path to the trained keras model",
         default=os.path.expanduser(
-            "~/mediti-train/model/fine-tuned-vgg16.keras"))
+            "~/mediti-train/model/fine-tuned-mobilenet.keras"))
 
     args = parser.parse_args()
 
     test_dir = pathlib.Path(args.test_dir)
     model_path = pathlib.Path(args.model_path)
+
+    if not test_dir.exists():
+        raise FileNotFoundError(
+            "Directory with the test data does not exist: {}".format(test_dir))
+
+    if not test_dir.is_dir():
+        raise NotADirectoryError(
+            "Test data expected in a directory, but got: {}".format(
+                test_dir))
+
+    if not model_path.exists():
+        raise FileNotFoundError("Model not found: {}".format(model_path))
+
+    if not model_path.is_file():
+        raise RuntimeError("Expected model in a file, but got: {}".format(
+            model_path))
 
     ##
     # Load the model
@@ -97,14 +113,12 @@ def main() -> None:
 
     print("Creating test set...")
 
-    preprocess_input = tf.keras.applications.vgg16.preprocess_input
-
     test_generator = file_iterator.FileIterator(
         shuffle=False,
         specs=specs,
         directory=str(test_dir),
         image_data_generator=tf.keras.preprocessing.image.ImageDataGenerator(
-            preprocessing_function=preprocess_input),
+            preprocessing_function=specs.preprocess_input),
         target_size=(specs.image_size, specs.image_size),
         batch_size=32,
         class_mode='categorical')

@@ -4,9 +4,9 @@
 
 import argparse
 import pathlib
+import tempfile
 
 import numpy as np
-import temppathlib
 import tensorflow as tf
 import tensorflowjs as tfjs
 
@@ -64,18 +64,17 @@ def main() -> None:
 
     model = tf.keras.models.load_model(str(keras_path))
 
-    with temppathlib.TemporaryDirectory(
-            base_tmp_dir=tfjs_dir,
-            prefix="savedmodel") as temp_savedmodel_dir:
+    with tempfile.TemporaryDirectory(
+            prefix='savedmodel', dir=str(tfjs_dir)) as temp_savedmodel_dir:
         tf.keras.experimental.export_saved_model(
-            model, str(temp_savedmodel_dir.path), serving_only=True)
+            model, str(temp_savedmodel_dir), serving_only=True)
 
         quantization_dtype = np.uint8  # quantize to 1-byte
         skip_op_check = False  # default
         strip_debug_ops = False  # default
 
         tfjs.converters.tf_saved_model_conversion_v2.convert_tf_saved_model(
-            str(temp_savedmodel_dir.path),
+            str(temp_savedmodel_dir),
             str(tfjs_dir),
             signature_def='serving_default',
             saved_model_tags='serve',
