@@ -38,12 +38,21 @@ def main() -> None:
     print("SSHing via gcloud compute to authorize the key...")
     retries = 6
     success = False
-    for _ in range(retries):
-        retcode = subprocess.call([
-            "gcloud", "compute", "ssh", "devop@{}".format(INSTANCE_NAME),
-            "--command", "echo oi"])
+    out = 'N/A'
+    err = 'N/A'
 
-        if retcode == 0:
+    for _ in range(retries):
+        # yapf: disable
+        proc = subprocess.Popen([
+            "gcloud", "compute", "ssh", "devop@{}".format(INSTANCE_NAME),
+            "--command", "echo oi"],
+            stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE)
+        # yapf: enable
+
+        out, err = proc.communicate()
+
+        if proc.returncode == 0:
             success = True
             break
 
@@ -51,8 +60,9 @@ def main() -> None:
 
     if not success:
         raise RuntimeError(
-            "Failed to gcloud compute ssh to the instance: devop@{}".format(
-                INSTANCE_NAME))
+            "Failed to gcloud compute ssh to the instance: devop@{}:\n"
+            "STDOUT:\n{}\n\nSTDERR:\n{}".format(
+                INSTANCE_NAME, out, err))
 
 
 if __name__ == "__main__":
