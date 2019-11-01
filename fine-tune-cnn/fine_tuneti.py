@@ -103,9 +103,19 @@ def main() -> None:
             "Directory with the training set does not exist: {}".format(
                 train_dir))
 
+    if not train_dir.is_dir():
+        raise NotADirectoryError(
+            "Train directory path is not a directory: {}".format(
+                train_dir))
+
     if not val_dir.exists():
         raise FileNotFoundError(
             "Directory with the validation set does not exist: {}".format(
+                val_dir))
+
+    if not val_dir.is_dir():
+        raise NotADirectoryError(
+            "Validation directory path is not a directory: {}".format(
                 val_dir))
 
     if model_path.exists() and not model_path.is_file():

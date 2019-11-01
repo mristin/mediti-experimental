@@ -105,7 +105,8 @@ def main() -> int:
             ssh.write_text(
                 remote_path=install_pth,
                 text=textwrap.dedent(
-                    '''#!/bin/bash
+                    '''\
+                    #!/bin/bash
                     set -e
                     echo "sudo apt-get install'ing ..."
                     sudo apt-get install -y python3-venv wget unzip
@@ -180,8 +181,8 @@ def main() -> int:
         print("Syncing the code...")
 
         rel_pths = [
-            pathlib.Path("fine_tune.py"),
-            pathlib.Path("evaluate.py"),
+            pathlib.Path("fine_tuneti.py"),
+            pathlib.Path("evaluateti.py"),
             pathlib.Path("file_iterator.py"),
             pathlib.Path("specsmod.py"),
         ]
@@ -193,8 +194,8 @@ def main() -> int:
                 local_path=script_dir / rel_pth,
                 remote_path=remote_src_pth / rel_pth)
 
-        for rel_pth in [pathlib.Path("fine_tune.py"),
-                        pathlib.Path("evaluate.py")]:
+        for rel_pth in [pathlib.Path("fine_tuneti.py"),
+                        pathlib.Path("evaluateti.py")]:
             ssh.chmod(remote_path=remote_src_pth / rel_pth, mode=0o700)
 
         ##
@@ -206,9 +207,6 @@ def main() -> int:
             remote_user, hostname))
 
     return 0
-
-    # TODO(marko): test deployment
-    # TODO(marko): see what went wrong with the evaluate
 
 
 if __name__ == "__main__":
