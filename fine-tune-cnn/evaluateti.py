@@ -18,6 +18,9 @@ import specsmod
 
 
 @icontract.require(lambda confusion_matrix: (confusion_matrix >= 0.0).all())
+@icontract.require(
+    lambda confusion_matrix:
+    confusion_matrix.shape[0] == confusion_matrix.shape[1])
 @icontract.ensure(
     lambda confusion_matrix, result:
     len(result) == confusion_matrix.shape[0] + 1)
