@@ -2,4 +2,4 @@ tensorflow-gpu==2.0.0b1
 scikit-learn==0.21.3
 icontract>=2.0.6,<3
 tabulate==0.8.5
-pillow==6.2.1
+pillow==8.1.1
