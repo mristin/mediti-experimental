@@ -1,4 +1,4 @@
-tensorflow==2.0.0b1
+tensorflow==2.5.1
 scikit-learn==0.21.3
 icontract>=2.0.6,<3
 tabulate==0.8.5
